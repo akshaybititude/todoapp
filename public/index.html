@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO"
+        crossorigin="anonymous">
+    <title>Todo</title>
+</head>
+
+<style>
+
+    h1{
+    font-size: 60px;
+    color: dimgray;
+}
+.tick{
+width: 20px;
+height: 20px;
+}
+.close {
+  width: 25px;
+  height: 25px;
+  opacity: 0;
+}
+.close:hover {
+  opacity: 1;
+}
+.close:before, .close:after {
+  position: absolute;
+  content: ' ';
+  height: 25px;
+  width: 2px;
+  background-color: #333;
+}
+.close:before {
+  transform: rotate(45deg);
+}
+.close:after {
+  transform: rotate(-45deg);
+}
+
+.data:hover + .close, .close:hover {
+    opacity: 1;
+}
+
+</style>
+
+<body>
+    <h1 class="text-center" style="margin-top:20px;">Todos</h1>
+    <div class=" shadow p-3 mb-5 bg-white rounded" style="margin-left:35%; margin-top: 0px;width: 432px; height:430px; ">
+        <div class=" shadow p-3 mb-5 bg-white rounded" style="width: 400px; height:400px; ">
+            <input type="text" style="width: 300px;height: 40px;" id="name" placeholder="Name">
+            <button class="btn btn-primary" id="add">Add</button>
+            <div class="details" style="padding-top:10px;"></div>
+            <div class="text-center">
+                <button id="all" class="btn btn-light">All</button>
+                <button id="active" class="btn btn-light">Active</button>
+                <button id="completed" class="btn btn-light">Completed</button>
+            </div>
+            Items left: <span class="counts"></span>
+        </div>
+    </div>
+
+
+
+</body>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script>
+    $(document).ready(function () {
+        var count = 0;
+        console.log("I am ready to start");
+        $.ajax({
+            url: 'http://localhost:6069/api/todo',
+            method: 'GET',
+            error: function (xhr, errorText) {
+                console.log("I made an error");
+                console.log(xhr, errorText)
+            },
+            success: function (data) {
+                console.log("I got it...")
+                console.log(data);
+                var html = '<ul>';
+                for (var i = 0; i < data.length; i++) {
+                    if (data[i].status == 1) {
+                        html += '<li><input type="checkbox"  class="tick" checked><a href="/asd" class="data" data-id="' + data[i].todo_id + '" style="text-decoration:line-through; font-size:25px; color:brown;">' + data[i].title + '</a><span class="close" data-id="' + data[i].todo_id + '"></span></li>'
+                    }
+                    else {
+                        html += '<li><input type="checkbox"  class="tick"><a href="/asd" class="data" style="font-size:25px; color:brown;" data-id="' + data[i].todo_id + '">' + data[i].title + '</a><span class="close" data-id="' + data[i].todo_id + '"></span></li>'
+                        ++count;
+                    }
+                }
+                html += '</ul>'
+                $('.details').append(html);
+                $('.counts').empty().append(count);
+            },
+            complete: function (xhr) {
+                console.log("Completed...");
+                console.log(xhr);
+            }
+        });
+        $('#add').on('click', function () {
+            var title = $('input').val();
+            console.log("Going to add ", title);
+            $.ajax({
+                url: 'http://localhost:6069/api/todo',
+                method: 'POST',
+                data: {
+                    title: title,
+                    status: 0
+                },
+                error: function (xhr, errorText) {
+                    console.log("I made an error");
+                    console.log(xhr, errorText)
+                },
+                success: function (data) {
+                    console.log("I have added...")
+                    console.log(data);
+                    var html = '<li><input type="checkbox" class="tick"><a href="/asd" style="font-size:25px; color:brown;" data-id="' + data.todo_id + '">' + data.title + '</a><span href="#" class="close" data-id="' + data.todo_id + '"></span></li>'
+                    $('ul').append(html);
+                    ++count;
+                    $('.counts').empty().append(count);
+                }
+            });
+        });
+
+        $('body').on('click', '.tick', function () {
+            var todo_id = $(this).next('a').data('id');
+            console.log("Details of ", todo_id);
+            if (this.checked) {
+                $(this).next("a").css("text-decoration", "line-through");
+                var s = 1;
+                --count;
+            }
+            else {
+                $(this).next("a").css("text-decoration", "none");
+                var s = 0;
+                ++count;
+            }
+            $.ajax({
+                url: 'http://localhost:6069/api/todo/' + todo_id,
+                method: 'PUT',
+                data: {
+                    status: s
+                },
+                error: function (xhr, errorText) {
+                    console.log("I made an error");
+                    console.log(xhr, errorText)
+                },
+                success: function (data) {
+                    console.log("Status changed...")
+                    console.log(data);
+                    $('.counts').empty().append(count);
+                }
+            });
+        });
+
+
+        $('body').on('click', 'a', function () {
+            var $el = $(this);
+            var todo_id = $(this).data('id');
+
+            var $input = $('<input/>').val($el.text());
+            $el.replaceWith($input);
+
+            var save = function () {
+                var $p = $($el).text($input.val());
+                $input.replaceWith($p);
+                var t = ($p).text();
+
+                $.ajax({
+                    url: 'http://localhost:6069/api/todo/' + todo_id,
+                    method: 'PUT',
+                    data: {
+                        title: t
+                    },
+                    error: function (xhr, errorText) {
+                        console.log("I made an error");
+                        console.log(xhr, errorText)
+                    },
+                    success: function (data) {
+                        console.log("title changed...")
+                        console.log(data);
+                    }
+                });
+            };
+            $input.one('blur', save).focus();
+        });
+
+        $('#all').on('click', function () {
+            $.ajax({
+                url: 'http://localhost:6069/api/todo',
+                method: 'GET',
+
+                error: function (xhr, errorText) {
+                    console.log("I made an error");
+                    console.log(xhr, errorText)
+                },
+                success: function (data) {
+                    console.log("I got it...")
+                    console.log(data);
+                    var html = '<ul>'
+                    count = 0;
+                    for (var i = 0; i < data.length; i++) {
+                        if (data[i].status == 1) {
+                            html += '<li><input type="checkbox"  class="tick" checked><a href="/asd" class="data" data-id="' + data[i].todo_id + '" style="text-decoration:line-through; font-size:25px; color:brown;">' + data[i].title + '</a><span href="#" class="close" data-id="' + data[i].todo_id + '"></span></li>'
+                        }
+                        else {
+                            html += '<li><input type="checkbox"  class="tick"><a href="/asd" class="data" style="font-size:25px; color:brown;" data-id="' + data[i].todo_id + '">' + data[i].title + '</a><span href="#" class="close" data-id="' + data[i].todo_id + '"></span></li>'
+                            ++count;
+                        }
+                    }
+                    html += '</ul>'
+                    $('.details').empty().append(html);
+                    $('.counts').empty().append(count);
+                },
+                complete: function (xhr) {
+                    console.log("Completed...");
+                    console.log(xhr);
+                }
+            });
+        });
+
+        $('#active').on('click', function () {
+            $.ajax({
+                url: 'http://localhost:6069/api/todo',
+                method: 'GET',
+
+                error: function (xhr, errorText) {
+                    console.log("I made an error");
+                    console.log(xhr, errorText)
+                },
+                success: function (data) {
+                    console.log("I got it...")
+                    console.log(data);
+                    var html = '<ul>'
+                    count = 0;
+                    for (var i = 0; i < data.length; i++) {
+                        if (data[i].status == 0) {
+                            html += '<li><input type="checkbox" class="tick"><a href="/asd" class="data" style="font-size:25px; color:brown;" data-id="' + data[i].todo_id + '">' + data[i].title + '</a><span href="#" class="close" data-id="' + data[i].todo_id + '"></span></li>'
+                            ++count;
+                        }
+                    }
+                    html += '</ul>'
+                    $('.details').empty().append(html);
+                    $('.counts').empty().append(count);
+                },
+                complete: function (xhr) {
+                    console.log("Completed...");
+                    console.log(xhr);
+                }
+            });
+        });
+
+        $('#completed').on('click', function () {
+            $.ajax({
+                url: 'http://localhost:6069/api/todo',
+                method: 'GET',
+
+                error: function (xhr, errorText) {
+                    console.log("I made an error");
+                    console.log(xhr, errorText)
+                },
+                success: function (data) {
+                    console.log("I got it...")
+                    console.log(data);
+                    var html = '<ul>'
+                    count = 0;
+                    for (var i = 0; i < data.length; i++) {
+                        if (data[i].status == 1) {
+                            html += '<li><input type="checkbox"  class="tick" checked><a href="/asd" class="data" data-id="' + data[i].todo_id + '" style="text-decoration:line-through; font-size:25px; color:brown;">' + data[i].title + '</a><span href="#" class="close" data-id="' + data[i].todo_id + '"></span></li>'
+                        }
+                    }
+                    html += '</ul>'
+                    $('.details').empty().append(html);
+                    $('.counts').empty().append(count);
+                },
+                complete: function (xhr) {
+                    console.log("Completed...");
+                    console.log(xhr);
+                }
+            });
+        });
+
+        $('body').on('click', '.close', function () {
+            var todo_id = $(this).data('id');
+
+            $.ajax({
+                url: 'http://localhost:6069/api/todo/' + todo_id,
+                method: 'GET',
+
+                error: function (xhr, errorText) {
+                    console.log("I made an error");
+                    console.log(xhr, errorText)
+                },
+                success: function (data) {
+                    console.log("I got it...")
+                    console.log(data);
+
+                    if (data.status == 0) {
+                        --count;
+                        $('.counts').empty().append(count);
+                    }
+
+
+                },
+                complete: function (xhr) {
+                    console.log("Completed...");
+                    console.log(xhr);
+                },
+                complete: function (xhr) {
+                    console.log("Completed...");
+                    console.log(xhr);
+                }
+            });
+
+
+            console.log("Details of ", todo_id);
+            $(this).parent().remove();
+            $.ajax({
+                url: 'http://localhost:6069/api/todo/' + todo_id,
+                method: 'DELETE',
+
+                error: function (xhr, errorText) {
+                    console.log("I made an error");
+                    console.log(xhr, errorText)
+                },
+                success: function (data) {
+                    console.log("title changed...")
+                    console.log(data);
+                }
+            });
+        });
+
+        $('body').on('click', 'a', function (e) {
+            e.preventDefault();
+            var todo_id = $(this).data('id');
+            console.log("Details of ", todo_id);
+            $.ajax({
+                url: 'http://localhost:6069/api/todo/' + todo_id,
+                method: 'GET',
+                error: function (xhr, errorText) {
+                    console.log("I made an error");
+                    console.log(xhr, errorText)
+                },
+                success: function (data) {
+                    console.log("I got it...")
+                    console.log(data);
+                    var html = '<h3>' + data.todo_id + ' - ' + data.title + '</h3>';
+                    $('#details').html(html);
+                }
+            });
+        })
+    });
+</script>
+
+</html>
