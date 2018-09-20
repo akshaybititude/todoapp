@@ -4,7 +4,9 @@ exports.getAll = getAll;
 exports.getOne = findOne;
 exports.create = create;
 exports.delete = deleteOne;
+exports.deleteAll = deleteAll;
 exports.update = updateOnes;
+
 
 function getAll(req, res) {
   User.fetchAll({}).then(function (users) {
@@ -42,6 +44,13 @@ function updateOnes(req, res) {
 
 function deleteOne(req, res) {
   new User({ todo_id: req.params.id }).destroy().then(function (users) {
+    users = users.toJSON();
+    res.send(users);
+  })
+}
+
+function deleteAll(req, res) {
+  new User().where({ status: req.params.id }).destroy().then(function (users) {
     users = users.toJSON();
     res.send(users);
   })
