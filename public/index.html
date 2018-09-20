@@ -265,9 +265,8 @@ height: 20px;
 
         $('#clear').on('click', function (data) {
             console.log(data);
-
             $.ajax({
-                url: 'http://localhost:6069/api/todo/status/1' ,
+                url: 'http://localhost:6069/api/todo/status/1',
                 method: 'DELETE',
 
                 error: function (xhr, errorText) {
@@ -278,27 +277,27 @@ height: 20px;
                     console.log("title changed...")
                     console.log(data);
                     getData(function (err, data) {
-                if (err) {
-                    console.log("I made an error");
-                    console.log(xhr, errorText)
-                }
-                console.log("I got it...")
-                console.log(data);
-                var html = '<ul>'
-                count = 0;
-                for (var i = 0; i < data.length; i++) {
-                    if (data[i].status == 1) {
-                        html += '<li><input type="checkbox"  class="tick" checked><a href="/asd" class="data" data-id="' + data[i].todo_id + '" style="text-decoration:line-through; font-size:25px; color:brown;">' + data[i].title + '</a><span href="#" class="close" data-id="' + data[i].todo_id + '"></span></li>'
-                    }
-                    else {
-                        html += '<li><input type="checkbox"  class="tick"><a href="/asd" class="data" style="font-size:25px; color:brown;" data-id="' + data[i].todo_id + '">' + data[i].title + '</a><span href="#" class="close" data-id="' + data[i].todo_id + '"></span></li>'
-                        ++count;
-                    }
-                }
-                html += '</ul>'
-                $('.details').empty().append(html);
-                $('.counts').empty().append(count);
-            })
+                        if (err) {
+                            console.log("I made an error");
+                            console.log(xhr, errorText)
+                        }
+                        console.log("I got it...")
+                        console.log(data);
+                        var html = '<ul>'
+                        count = 0;
+                        for (var i = 0; i < data.length; i++) {
+                            if (data[i].status == 1) {
+                                html += '<li><input type="checkbox"  class="tick" checked><a href="/asd" class="data" data-id="' + data[i].todo_id + '" style="text-decoration:line-through; font-size:25px; color:brown;">' + data[i].title + '</a><span href="#" class="close" data-id="' + data[i].todo_id + '"></span></li>'
+                            }
+                            else {
+                                html += '<li><input type="checkbox"  class="tick"><a href="/asd" class="data" style="font-size:25px; color:brown;" data-id="' + data[i].todo_id + '">' + data[i].title + '</a><span href="#" class="close" data-id="' + data[i].todo_id + '"></span></li>'
+                                ++count;
+                            }
+                        }
+                        html += '</ul>'
+                        $('.details').empty().append(html);
+                        $('.counts').empty().append(count);
+                    })
                 }
             });
         });
@@ -364,7 +363,6 @@ height: 20px;
                 }
             });
         }
-
     });
 </script>
 
